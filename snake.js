@@ -56,58 +56,78 @@ let moveLeft = ([top, left]) => [top, left - 1];
 let moveUp = ([top, left]) => [top - 1, left];
 let moveDown = ([top, left]) => [top + 1, left];
 
-let currentDirection = moveDown;
-let lastDirection = currentDirection;
+let currentDirection = moveRight;
+let directionQueue = [];
 
 // Change Direction With Keyboard
 window.addEventListener('keydown', (event) => {
   console.log(event.key);
-  switch (event.key) {
-    case 'ArrowLeft':
-    case 'A':
-    case 'a':
-      if (lastDirection !== moveRight) {
-        currentDirection = moveLeft;
-      }
-      break;
-    case 'ArrowRight':
-    case 'D':
-    case 'd':
-      if (lastDirection !== moveLeft) {
-        currentDirection = moveRight;
-      }
-      break;
-    case 'ArrowUp':
-    case 'W':
-    case 'w':
-      if (lastDirection !== moveDown) {
-        currentDirection = moveUp;
-      }
-      break;
-    case 'ArrowDown':
-    case 'S':
-    case 's':
-      if (lastDirection !== moveUp) {
-        currentDirection = moveDown;
-      }
-      break;
-    default:
-      break;
-  }
+  if (event.key)
+    switch (event.key) {
+      case 'ArrowLeft':
+      case 'A':
+      case 'a':
+        directionQueue.push(moveLeft);
+        break;
+      case 'ArrowRight':
+      case 'D':
+      case 'd':
+        directionQueue.push(moveRight);
+        break;
+      case 'ArrowUp':
+      case 'W':
+      case 'w':
+        directionQueue.push(moveUp);
+        break;
+      case 'ArrowDown':
+      case 'S':
+      case 's':
+        directionQueue.push(moveDown);
+        break;
+      default:
+        break;
+    }
 });
 
 // Step
 function step() {
+  console.log(directionQueue);
   currentSnake.shift();
   let head = currentSnake[currentSnake.length - 1];
+  let nextDirection = currentDirection;
+  while (directionQueue.length > 0) {
+    let candidateDirection = directionQueue.shift();
+    if (areOpposite(candidateDirection, currentDirection)) {
+      continue;
+    }
+    nextDirection = candidateDirection;
+    break;
+  }
+  currentDirection = nextDirection;
   let nextHead = currentDirection(head);
-  lastDirection = currentDirection;
   currentSnake.push(nextHead);
   drawSnake(currentSnake);
+}
+
+// Helper
+function areOpposite(dir1, dir2) {
+  if (dir1 === moveLeft && dir2 === moveRight) {
+    return true;
+  }
+  if (dir1 === moveRight && dir2 === moveLeft) {
+    return true;
+  }
+  if (dir1 === moveUp && dir2 === moveDown) {
+    return true;
+  }
+  if (dir1 === moveDown && dir2 === moveUp) {
+    return true;
+  }
+  return false;
 }
 
 // Initial Function Calls
 drawSnake(currentSnake);
 setInterval(() => {
   step();
-}, 100);
+}, 50);
