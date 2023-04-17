@@ -25,13 +25,19 @@ let pixels = new Map();
   }
 })();
 
-// Draw Snake
-function drawSnake(snake) {
+// TODO: memoize
+function getSnakePositionSet(snake) {
   let snakePositions = new Set();
   for (let [top, left] of snake) {
     let position = top + '_' + left;
     snakePositions.add(position);
   }
+  return snakePositions;
+}
+
+// Draw Snake
+function drawSnake(snake) {
+  let snakePositions = getSnakePositionSet(snake);
   for (let i = 0; i < ROWS; i++) {
     for (let j = 0; j < COLS; j++) {
       let position = i + '_' + j;
@@ -48,6 +54,8 @@ let currentSnake = [
   [0, 2],
   [0, 3],
   [0, 4],
+  [0, 5],
+  [0, 6],
 ];
 
 // Movements
@@ -104,6 +112,11 @@ function step() {
   }
   currentDirection = nextDirection;
   let nextHead = currentDirection(head);
+  // Check if head goes out of bounds
+  if (!checkValidHead(currentSnake, nextHead)) {
+    stopGame();
+    return;
+  }
   currentSnake.push(nextHead);
   drawSnake(currentSnake);
 }
@@ -125,8 +138,28 @@ function areOpposite(dir1, dir2) {
   return false;
 }
 
+function checkValidHead(snake, [top, left]) {
+  if (top < 0 || left < 0) {
+    return false;
+  }
+  if (top >= ROWS || left >= COLS) {
+    return false;
+  }
+  let snakePositions = getSnakePositionSet(snake);
+  let position = top + '_' + left;
+  if (snakePositions.has(position)) {
+    return false;
+  }
+  return true;
+}
+
+function stopGame() {
+  canvas.style.borderColor = 'red';
+  clearInterval(gameInterval);
+}
+
 // Initial Function Calls
 drawSnake(currentSnake);
-setInterval(() => {
+let gameInterval = setInterval(() => {
   step();
 }, 100);
